@@ -30,29 +30,36 @@ def paginate_objects(request, objects_list, per_page=10):
 
 
 def edit_profile(request, name):
-    """Изменение профиля пользователя."""
+    """Редактирование профиля пользователем."""
     user = get_object_or_404(User, username=name)
-    if user.username != request.user.username:
-        return redirect('login')
+    if user != request.user:
+        return redirect('blog:profile', name)
+
     form = ProfileForm(request.POST or None, instance=user)
-    context = {'form': form}
     if form.is_valid():
         form.save()
+        return redirect('blog:profile', name)
+
+    context = {'form': form}
     return render(request, 'blog/user.html', context)
 
 
 def info_profile(request, name):
     """Информация о профиле пользователя."""
     templates = 'blog/profile.html'
-    user = get_object_or_404(
-        User,
-        username=name,
-    )
-    profile_post = user.posts.all()
+    user = get_object_or_404(User, username=name)
+
+    if request.user == user:
+        profile_posts = user.posts.all()
+    else:
+        profile_posts = user.posts.filter(
+            is_published=True,
+            pub_date__lte=timezone.now()
+        )
 
     context = {
-        'profile': user,
-        'page_obj': paginate_objects(request, profile_post),
+        'profile_user': user,
+        'page_obj': paginate_objects(request, profile_posts),
     }
     return render(request, templates, context)
 
