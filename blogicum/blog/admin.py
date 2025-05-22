@@ -1,50 +1,33 @@
 from django.contrib import admin
-
-from .models import Category, Comment, Location, Post
-
-admin.site.empty_value_display = 'Не задано'
-
-
-class PostInline(admin.StackedInline):
-    model = Post
-    extra = 0
+from .models import Category, Location, Post, Comment
 
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    inlines = (
-        PostInline,
-    )
+    """Админ-класс для модели Category."""
+    list_display = ('title', 'slug', 'is_published', 'created_at')
+    search_fields = ('title', 'slug')
+    prepopulated_fields = {'slug': ('title',)}
+
+
+@admin.register(Location)
+class LocationAdmin(admin.ModelAdmin):
+    """Админ-класс для модели Location."""
+    list_display = ('name', 'is_published', 'created_at')
+    search_fields = ('name',)
 
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    list_display = (
-        'title',
-        'text',
-        'is_published',
-        'category',
-        'location',
-        'author',
-        'pub_date'
-    )
-    list_editable = (
-        'is_published',
-        'pub_date',
-        'category'
-    )
-    search_fields = ('title',)
-    list_filter = ('category',)
-    list_display_links = ('title',)
+    """Админ-класс для модели Post."""
+    list_display = ('title', 'author', 'category', 'pub_date', 'is_published')
+    list_filter = ('is_published', 'category', 'pub_date')
+    search_fields = ('title', 'text')
+    date_hierarchy = 'pub_date'
 
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    list_display = (
-        'text',
-        'author',
-        'post'
-    )
-
-
-admin.site.register(Location)
+    """Админ-класс для модели Comment."""
+    list_display = ('author', 'post', 'created_at')
+    search_fields = ('author__username', 'text')
